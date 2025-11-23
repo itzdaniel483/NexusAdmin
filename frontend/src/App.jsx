@@ -23,11 +23,20 @@ function App() {
     try {
       const res = await axios.get('http://localhost:3000/api/settings');
       if (res.data.authMode === 'external') {
-        // External auth mode - clear any local tokens and bypass login
+        // External auth mode - clear any local tokens
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         delete axios.defaults.headers.common['Authorization'];
-        setUser({ username: 'External User', role: 'admin' });
+
+        // Try to verify with backend (which will check for Cloudflare JWT)
+        try {
+          const verifyRes = await axios.get('http://localhost:3000/api/servers');
+          // If successful, we're authenticated via Cloudflare
+          setUser({ username: 'Cloudflare User', role: 'admin' });
+        } catch (err) {
+          // Not authenticated - will show login screen with Cloudflare message
+          console.log('Not authenticated via Cloudflare');
+        }
         setLoading(false);
         return;
       }
