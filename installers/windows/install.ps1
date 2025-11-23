@@ -16,14 +16,13 @@ if (-not $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Adm
 
 # 1. Check for Node.js
 Write-Host "Step 1/5: Checking system requirements..." -ForegroundColor Green
-try {
-    $nodeVersion = node -v
-    Write-Host "✓ Node.js found: $nodeVersion" -ForegroundColor Gray
-} catch {
+if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
     Write-Host "Error: Node.js is not installed." -ForegroundColor Red
     Write-Host "Please install Node.js v18+ from https://nodejs.org/" -ForegroundColor Yellow
     exit
 }
+$nodeVersion = node -v
+Write-Host "[OK] Node.js found: $nodeVersion" -ForegroundColor Gray
 
 # 2. Install SteamCMD
 Write-Host "Step 2/5: Setting up SteamCMD..." -ForegroundColor Green
@@ -44,9 +43,10 @@ if (-not (Test-Path $steamcmdExe)) {
     Expand-Archive -Path $steamcmdZip -DestinationPath $steamcmdDir -Force
     Remove-Item $steamcmdZip
     
-    Write-Host "✓ SteamCMD installed to $steamcmdDir" -ForegroundColor Gray
-} else {
-    Write-Host "✓ SteamCMD already installed" -ForegroundColor Gray
+    Write-Host "[OK] SteamCMD installed to $steamcmdDir" -ForegroundColor Gray
+}
+if (Test-Path $steamcmdExe) {
+    Write-Host "[OK] SteamCMD is ready" -ForegroundColor Gray
 }
 
 # 3. Install Backend Dependencies
@@ -57,13 +57,14 @@ $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $backendDir = Join-Path $scriptDir "..\..\backend"
 Set-Location $backendDir
 
-try {
-    npm install
-    Write-Host "✓ Backend dependencies installed" -ForegroundColor Gray
-} catch {
+Write-Host "Installing npm packages..." -ForegroundColor Gray
+cmd /c "npm install"
+
+if ($LASTEXITCODE -ne 0) {
     Write-Host "Error installing backend dependencies." -ForegroundColor Red
     exit
 }
+Write-Host "[OK] Backend dependencies installed" -ForegroundColor Gray
 
 # 4. Configure SteamCMD Path
 Write-Host "Step 4/5: Configuring application..." -ForegroundColor Green
@@ -71,11 +72,16 @@ $steamcmdJs = "$backendDir\services\steamcmd.js"
 
 if (Test-Path $steamcmdJs) {
     $content = Get-Content $steamcmdJs
-    # Escape backslashes for JS string
-    $escapedPath = $steamcmdExe -replace "\\", "\\"
+    
+    # Use [char]92 for backslash to avoid escaping issues
+    $bs = [char]92
+    
+    # Escape backslashes for JS string (replace \ with \\)
+    $escapedPath = $steamcmdExe -replace [regex]::Escape($bs), "$bs$bs"
+    
     $newContent = $content -replace "const STEAMCMD_PATH = .*", "const STEAMCMD_PATH = '$escapedPath';"
     Set-Content -Path $steamcmdJs -Value $newContent
-    Write-Host "✓ SteamCMD path configured" -ForegroundColor Gray
+    Write-Host "[OK] SteamCMD path configured" -ForegroundColor Gray
 }
 
 # 5. Create Data Directories
@@ -88,11 +94,11 @@ if (-not (Test-Path $dataDir)) { New-Item -ItemType Directory -Path $dataDir | O
 if (-not (Test-Path $serversDir)) { New-Item -ItemType Directory -Path $serversDir | Out-Null }
 if (-not (Test-Path $cacheDir)) { New-Item -ItemType Directory -Path $cacheDir | Out-Null }
 
-Write-Host "✓ Data directories created" -ForegroundColor Gray
+Write-Host "[OK] Data directories created" -ForegroundColor Gray
 
 Write-Host ""
 Write-Host "=========================================" -ForegroundColor Green
-Write-Host "      Installation Complete! 🚀          " -ForegroundColor Green
+Write-Host "      Installation Complete!             " -ForegroundColor Green
 Write-Host "=========================================" -ForegroundColor Green
 Write-Host ""
 Write-Host "To start NexusAdmin:" -ForegroundColor Cyan

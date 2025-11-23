@@ -20,7 +20,7 @@ if ! command -v node &> /dev/null; then
     echo "Please install Node.js v18+ from https://nodejs.org/"
     exit 1
 fi
-echo "✓ Node.js found: $(node -v)"
+echo "[OK] Node.js found: $(node -v)"
 
 # 2. Install SteamCMD
 echo -e "${GREEN}Step 2/5: Setting up SteamCMD...${NC}"
@@ -37,9 +37,9 @@ if [ ! -d "$STEAMCMD_DIR" ]; then
         # Linux
         curl -sqL "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz" | tar zxvf - -C "$STEAMCMD_DIR"
     fi
-    echo "✓ SteamCMD installed to $STEAMCMD_DIR"
+    echo "[OK] SteamCMD installed to $STEAMCMD_DIR"
 else
-    echo "✓ SteamCMD already installed"
+    echo "[OK] SteamCMD already installed"
 fi
 
 # 3. Install Backend Dependencies
@@ -51,7 +51,7 @@ BACKEND_DIR="$SCRIPT_DIR/../../backend"
 
 cd "$BACKEND_DIR" || exit
 npm install
-echo "✓ Backend dependencies installed"
+echo "[OK] Backend dependencies installed"
 
 # 4. Configure SteamCMD Path
 echo -e "${GREEN}Step 4/5: Configuring application...${NC}"
@@ -64,7 +64,7 @@ if [ -f "$STEAMCMD_JS" ]; then
     else
         sed -i "s|const STEAMCMD_PATH = .*|const STEAMCMD_PATH = '$STEAMCMD_DIR/steamcmd.sh';|g" "$STEAMCMD_JS"
     fi
-    echo "✓ SteamCMD path configured"
+    echo "[OK] SteamCMD path configured"
 fi
 
 # 5. Create Data Directories
@@ -73,11 +73,11 @@ mkdir -p "$BACKEND_DIR/data"
 mkdir -p "$BACKEND_DIR/servers"
 mkdir -p "$BACKEND_DIR/cache"
 
-echo "✓ Data directories created"
+echo "[OK] Data directories created"
 
 echo ""
 echo -e "${GREEN}=========================================${NC}"
-echo -e "${GREEN}      Installation Complete! 🚀          ${NC}"
+echo -e "${GREEN}      Installation Complete!             ${NC}"
 echo -e "${GREEN}=========================================${NC}"
 echo ""
 echo -e "${CYAN}To start NexusAdmin:${NC}"
