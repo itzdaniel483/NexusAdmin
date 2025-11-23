@@ -920,7 +920,8 @@ if (fs.existsSync(frontendPath)) {
     app.use(express.static(frontendPath));
 
     // Handle SPA routing - return index.html for any unknown route
-    app.get('*', (req, res) => {
+    // Using regex /.*/ to avoid Express 5/path-to-regexp error with '*'
+    app.get(/.*/, (req, res) => {
         res.sendFile(path.join(frontendPath, 'index.html'));
     });
 } else {
