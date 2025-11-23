@@ -23,7 +23,10 @@ function App() {
     try {
       const res = await axios.get('http://localhost:3000/api/settings');
       if (res.data.authMode === 'external') {
-        // External auth mode - bypass login
+        // External auth mode - clear any local tokens and bypass login
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        delete axios.defaults.headers.common['Authorization'];
         setUser({ username: 'External User', role: 'admin' });
         setLoading(false);
         return;
