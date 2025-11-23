@@ -86,7 +86,8 @@ Write-Host ""
 Write-Host "Step 3/5: Installing backend dependencies..." -ForegroundColor Green
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-Set-Location "$scriptDir\backend"
+# Go up two levels (installers\windows -> installers -> root) then into backend
+Set-Location "$scriptDir\..\..\backend"
 
 try {
     npm install

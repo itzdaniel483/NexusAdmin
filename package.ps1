@@ -41,8 +41,7 @@ Copy-Item "frontend\dist\*" "$frontendDest\dist\" -Recurse
 
 # 4. Copy Root Files
 Write-Host "Copying Installation Files..." -ForegroundColor Green
-Copy-Item "install.ps1" "$releaseDir\"
-Copy-Item "install.sh" "$releaseDir\"
+Copy-Item "installers" "$releaseDir\" -Recurse
 Copy-Item "README.md" "$releaseDir\"
 
 # 5. Create Zip

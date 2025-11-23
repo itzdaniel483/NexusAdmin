@@ -38,7 +38,7 @@ Built for speed, security, and ease of use.
 
 1.  **Run the installer** (PowerShell as Administrator):
     ```powershell
-    .\install.ps1
+    .\installers\windows\install.ps1
     ```
 2.  **Start the panel:**
     ```powershell
@@ -52,8 +52,8 @@ Built for speed, security, and ease of use.
 
 1.  **Run the installer:**
     ```bash
-    chmod +x install.sh
-    ./install.sh
+    chmod +x installers/linux/install.sh
+    ./installers/linux/install.sh
     ```
 2.  **Start the panel:**
     ```bash

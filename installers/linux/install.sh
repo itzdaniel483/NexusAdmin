@@ -113,7 +113,8 @@ echo -e "${GREEN}✓ SteamCMD installed at $STEAMCMD_DIR${NC}"
 echo ""
 echo -e "${GREEN}Step 3/5: Installing backend dependencies...${NC}"
 
-cd "$(dirname "$0")/backend"
+# Go up one level from installers/linux to root, then into backend
+cd "$(dirname "$0")/../../backend"
 npm install
 
 echo -e "${GREEN}✓ Backend dependencies installed${NC}"
