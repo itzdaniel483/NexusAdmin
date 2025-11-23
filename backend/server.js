@@ -913,6 +913,20 @@ setInterval(async () => {
     }
 }, 5000);
 
+// Serve static frontend files in production
+const frontendPath = path.join(__dirname, '../frontend/dist');
+if (fs.existsSync(frontendPath)) {
+    console.log('Serving frontend from:', frontendPath);
+    app.use(express.static(frontendPath));
+
+    // Handle SPA routing - return index.html for any unknown route
+    app.get('*', (req, res) => {
+        res.sendFile(path.join(frontendPath, 'index.html'));
+    });
+} else {
+    console.log('Frontend build not found at:', frontendPath);
+}
+
 const PORT = 3000;
 server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
