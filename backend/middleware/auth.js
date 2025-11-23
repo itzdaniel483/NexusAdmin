@@ -73,7 +73,7 @@ async function verifyCloudflareJWT(token, teamDomain, audience) {
 const authMiddleware = async (req, res, next) => {
     // Public routes that don't require authentication
     const publicRoutes = ['/api/login', '/api/settings'];
-    if (publicRoutes.includes(req.path)) {
+    if (publicRoutes.includes(req.originalUrl)) {
         return next();
     }
 

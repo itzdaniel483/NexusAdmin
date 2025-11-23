@@ -60,8 +60,17 @@ steamcmd.init();
     }
 })();
 
-// Apply Auth Middleware
-app.use(authMiddleware);
+// Serve static frontend files in production (BEFORE Auth Middleware)
+const frontendPath = path.join(__dirname, '../frontend/dist');
+if (fs.existsSync(frontendPath)) {
+    console.log('Serving frontend from:', frontendPath);
+    app.use(express.static(frontendPath));
+} else {
+    console.log('Frontend build not found at:', frontendPath);
+}
+
+// Apply Auth Middleware (Only for API routes)
+app.use('/api', authMiddleware);
 
 // Routes
 
@@ -913,19 +922,13 @@ setInterval(async () => {
     }
 }, 5000);
 
-// Serve static frontend files in production
-const frontendPath = path.join(__dirname, '../frontend/dist');
+// Handle SPA routing - return index.html for any unknown route
+// Using regex /.*/ to avoid Express 5/path-to-regexp error with '*'
+// This must be AFTER API routes so it doesn't intercept them
 if (fs.existsSync(frontendPath)) {
-    console.log('Serving frontend from:', frontendPath);
-    app.use(express.static(frontendPath));
-
-    // Handle SPA routing - return index.html for any unknown route
-    // Using regex /.*/ to avoid Express 5/path-to-regexp error with '*'
     app.get(/.*/, (req, res) => {
         res.sendFile(path.join(frontendPath, 'index.html'));
     });
-} else {
-    console.log('Frontend build not found at:', frontendPath);
 }
 
 const PORT = 3000;
