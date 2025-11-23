@@ -85,9 +85,15 @@ const authMiddleware = async (req, res, next) => {
             // Check for Cloudflare Access JWT
             const cfJwt = req.headers['cf-access-jwt-assertion'];
 
-            // If no Cloudflare JWT, allow for local testing
+            // If no Cloudflare JWT, allow for local testing in development only
             if (!cfJwt) {
-                console.warn('External auth mode enabled but no Cloudflare JWT found. Allowing for local testing.');
+                if (process.env.NODE_ENV === 'production') {
+                    return res.status(401).json({
+                        error: 'Cloudflare Access JWT required. Please access this application through your Cloudflare Access URL.'
+                    });
+                }
+
+                console.warn('External auth mode enabled but no Cloudflare JWT found. Allowing for local testing (development mode).');
                 req.user = {
                     username: 'local_test_user',
                     role: 'admin',
