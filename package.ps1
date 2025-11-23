@@ -43,6 +43,7 @@ Copy-Item "frontend\dist\*" "$frontendDest\dist\" -Recurse
 Write-Host "Copying Installation Files..." -ForegroundColor Green
 Copy-Item "installers" "$releaseDir\" -Recurse
 Copy-Item "README.md" "$releaseDir\"
+Copy-Item "package.json" "$releaseDir\"
 
 # 5. Create Zip
 Write-Host "Creating Zip Archive..." -ForegroundColor Green
