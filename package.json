@@ -4,6 +4,7 @@
     "description": "NexusAdmin Game Server Manager",
     "scripts": {
         "start": "npm start --prefix backend",
+        "dev": "npm run dev --prefix backend",
         "install-deps": "npm install --prefix backend"
     },
     "author": "",

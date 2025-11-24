@@ -14,14 +14,10 @@ function App() {
   const [selectedServer, setSelectedServer] = useState(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
   const checkAuth = async () => {
     // Check if external auth is enabled FIRST
     try {
-      const res = await axios.get('http://localhost:3000/api/settings');
+      const res = await axios.get('/api/settings');
       if (res.data.authMode === 'external') {
         // External auth mode - clear any local tokens
         localStorage.removeItem('token');
@@ -30,10 +26,10 @@ function App() {
 
         // Try to verify with backend (which will check for Cloudflare JWT)
         try {
-          const verifyRes = await axios.get('http://localhost:3000/api/servers');
+          await axios.get('/api/servers');
           // If successful, we're authenticated via Cloudflare
           setUser({ username: 'Cloudflare User', role: 'admin' });
-        } catch (err) {
+        } catch {
           // Not authenticated - will show login screen with Cloudflare message
           console.log('Not authenticated via Cloudflare');
         }
@@ -55,6 +51,11 @@ function App() {
 
     setLoading(false);
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    checkAuth();
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');

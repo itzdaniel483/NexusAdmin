@@ -24,7 +24,45 @@ function ServerControl({ server }) {
     const [commandHistory, setCommandHistory] = useState([]);
     const [historyIndex, setHistoryIndex] = useState(-1);
 
+    // Early return if server is invalid
+    if (!server) {
+        return (
+            <div className="text-center text-red-500 py-20">
+                <p>Error: No server data provided</p>
+            </div>
+        );
+    }
+
+    if (!server.id) {
+        return (
+            <div className="text-center text-red-500 py-20">
+                <p>Error: Server is missing ID property</p>
+                <p className="text-sm text-gray-400 mt-2">Server object: {JSON.stringify(server)}</p>
+            </div>
+        );
+    }
+
     const serverId = server.id;
+
+    const checkStatus = async () => {
+        try {
+            const res = await axios.get(`/api/server/${serverId}/status`);
+            setStatus(res.data.status);
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const loadLogs = async () => {
+        try {
+            const res = await axios.get(`/api/server/${serverId}/logs`);
+            if (res.data && xtermRef.current) {
+                xtermRef.current.write(res.data);
+            }
+        } catch (err) {
+            console.error('Failed to load logs:', err);
+        }
+    };
 
     useEffect(() => {
         // Initialize xterm
@@ -89,29 +127,9 @@ function ServerControl({ server }) {
         };
     }, [serverId]);
 
-    const checkStatus = async () => {
-        try {
-            const res = await axios.get(`http://localhost:3000/api/server/${serverId}/status`);
-            setStatus(res.data.status);
-        } catch (err) {
-            console.error(err);
-        }
-    };
-
-    const loadLogs = async () => {
-        try {
-            const res = await axios.get(`http://localhost:3000/api/server/${serverId}/logs`);
-            if (res.data && xtermRef.current) {
-                xtermRef.current.write(res.data);
-            }
-        } catch (err) {
-            console.error('Failed to load logs:', err);
-        }
-    };
-
     const handleStart = async () => {
         try {
-            await axios.post('http://localhost:3000/api/server/start', { id: serverId });
+            await axios.post('/api/server/start', { id: serverId });
         } catch (err) {
             xtermRef.current?.write(`\r\n\x1b[31mError starting server: ${err.response?.data?.error || err.message}\x1b[0m\r\n`);
         }
@@ -119,7 +137,7 @@ function ServerControl({ server }) {
 
     const handleStop = async () => {
         try {
-            await axios.post('http://localhost:3000/api/server/stop', { id: serverId });
+            await axios.post('/api/server/stop', { id: serverId });
         } catch (err) {
             console.error(err);
         }
@@ -193,10 +211,7 @@ function ServerControl({ server }) {
                         <div className="flex items-center space-x-2">
                             <span className="text-gray-500">IP:</span>
                             <code className="text-blue-400 bg-gray-900/50 px-2 py-1 rounded font-mono">
-                                localhost:{(() => {
-                                    const portIndex = server.args.indexOf('+port');
-                                    return portIndex !== -1 && server.args[portIndex + 1] ? server.args[portIndex + 1] : '27015';
-                                })()}
+                                localhost:{server.port || '27015'}
                             </code>
                         </div>
                         {server.rconPassword && (
@@ -245,8 +260,13 @@ function ServerControl({ server }) {
                         </button>
                     )}
                     {status === 'running' && (
-                        <>
-                        </>
+                        <button
+                            onClick={handleStop}
+                            className="bg-red-600 hover:bg-red-500 text-white px-6 py-3 rounded-xl flex items-center space-x-2 font-medium"
+                        >
+                            <Square size={18} />
+                            <span>Stop Server</span>
+                        </button>
                     )}
                 </div>
             </div>

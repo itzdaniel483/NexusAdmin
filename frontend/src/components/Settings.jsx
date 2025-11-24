@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Settings as SettingsIcon, AlertTriangle, Terminal, RefreshCw, Download, Trash2, HardDrive, Package, Users, Shield, Plus, X } from 'lucide-react';
 import axios from 'axios';
-import io from 'socket.io-client';
 import ChangePassword from './ChangePassword';
 
-const socket = io('http://localhost:3000');
+
 
 const GAMES = [
     { id: '4020', name: "Garry's Mod" },
@@ -27,7 +26,7 @@ const GAMES = [
 
 function Settings() {
     const [activeTab, setActiveTab] = useState('general');
-    const [restarting, setRestarting] = useState(false);
+
 
     return (
         <div className="space-y-6">
@@ -130,7 +129,23 @@ function CacheManager() {
     const [completedGame, setCompletedGame] = useState('');
     const [prevDownloading, setPrevDownloading] = useState({});
 
+    const fetchCachedGames = async () => {
+        try {
+            const res = await axios.get('/api/cache/list');
+            const cacheMap = {};
+            res.data.cached.forEach(item => {
+                cacheMap[item.appId] = item;
+            });
+            setCachedGames(cacheMap);
+            setLoading(false);
+        } catch (err) {
+            console.error('Error fetching cache:', err);
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         fetchCachedGames();
         // Poll for updates every 2 seconds
         const interval = setInterval(fetchCachedGames, 2000);
@@ -160,30 +175,18 @@ function CacheManager() {
                 currentDownloading[appId] = true;
             }
         });
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setPrevDownloading(currentDownloading);
-    }, [cachedGames]);
+    }, [cachedGames, prevDownloading]);
 
-    const fetchCachedGames = async () => {
-        try {
-            const res = await axios.get('http://localhost:3000/api/cache/list');
-            const cacheMap = {};
-            res.data.cached.forEach(item => {
-                cacheMap[item.appId] = item;
-            });
-            setCachedGames(cacheMap);
-            setLoading(false);
-        } catch (err) {
-            console.error('Error fetching cache:', err);
-            setLoading(false);
-        }
-    };
+
 
     const handleDownload = async (appId, gameName) => {
         setDownloading(prev => ({ ...prev, [appId]: true }));
         setPrevDownloading(prev => ({ ...prev, [appId]: true })); // Mark as downloading for tracking
 
         try {
-            await axios.post(`http://localhost:3000/api/cache/download/${appId}`, { gameName });
+            await axios.post(`/api/cache/download/${appId}`, { gameName });
             await fetchCachedGames();
         } catch (err) {
             alert(`Failed to download ${gameName}: ${err.message}`);
@@ -195,7 +198,7 @@ function CacheManager() {
         if (!confirm(`Are you sure you want to delete the cached ${gameName}?`)) return;
 
         try {
-            await axios.delete(`http://localhost:3000/api/cache/${appId}`);
+            await axios.delete(`/api/cache/${appId}`);
             await fetchCachedGames();
         } catch (err) {
             alert(`Failed to delete cache: ${err.message}`);
@@ -318,7 +321,7 @@ function SteamSettings() {
     const [success, setSuccess] = useState(false);
 
     useEffect(() => {
-        axios.get('http://localhost:3000/api/settings')
+        axios.get('/api/settings')
             .then(res => {
                 setApiKey(res.data.steamApiKey || '');
                 setLoading(false);
@@ -333,10 +336,10 @@ function SteamSettings() {
         setSaving(true);
         setSuccess(false);
         try {
-            await axios.post('http://localhost:3000/api/settings', { steamApiKey: apiKey });
+            await axios.post('/api/settings', { steamApiKey: apiKey });
             setSuccess(true);
             setTimeout(() => setSuccess(false), 3000);
-        } catch (err) {
+        } catch {
             alert('Failed to save settings');
         } finally {
             setSaving(false);
@@ -395,13 +398,9 @@ function UserManager() {
     const [newUser, setNewUser] = useState({ username: '', password: '', role: 'user' });
     const [error, setError] = useState('');
 
-    useEffect(() => {
-        fetchUsers();
-    }, []);
-
     const fetchUsers = async () => {
         try {
-            const res = await axios.get('http://localhost:3000/api/users');
+            const res = await axios.get('/api/users');
             setUsers(res.data);
             setLoading(false);
         } catch (err) {
@@ -410,11 +409,18 @@ function UserManager() {
         }
     };
 
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        fetchUsers();
+    }, []);
+
+
+
     const handleAddUser = async (e) => {
         e.preventDefault();
         setError('');
         try {
-            await axios.post('http://localhost:3000/api/users', newUser);
+            await axios.post('/api/users', newUser);
             setShowAddForm(false);
             setNewUser({ username: '', password: '', role: 'user' });
             fetchUsers();
@@ -426,7 +432,7 @@ function UserManager() {
     const handleDeleteUser = async (id, username) => {
         if (!confirm(`Are you sure you want to delete user ${username}?`)) return;
         try {
-            await axios.delete(`http://localhost:3000/api/users/${id}`);
+            await axios.delete(`/api/users/${id}`);
             fetchUsers();
         } catch (err) {
             alert(err.response?.data?.error || 'Failed to delete user');
@@ -545,7 +551,7 @@ function AuthSettings() {
     const [success, setSuccess] = useState(false);
 
     useEffect(() => {
-        axios.get('http://localhost:3000/api/settings')
+        axios.get('/api/settings')
             .then(res => {
                 setAuthMode(res.data.authMode || 'local');
                 setCfConfig({
@@ -571,11 +577,11 @@ function AuthSettings() {
                 payload.cfAccessAud = cfConfig.cfAccessAud;
             }
 
-            await axios.post('http://localhost:3000/api/settings', payload);
+            await axios.post('/api/settings', payload);
             setAuthMode(mode);
             setSuccess(true);
             setTimeout(() => setSuccess(false), 3000);
-        } catch (err) {
+        } catch {
             alert('Failed to save settings');
         } finally {
             setSaving(false);

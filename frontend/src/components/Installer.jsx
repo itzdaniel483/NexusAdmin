@@ -1,16 +1,12 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import io from 'socket.io-client';
 import { Download, Loader2 } from 'lucide-react';
-
-const socket = io('http://localhost:3000');
+import { io } from 'socket.io-client';
 
 const GAMES = [
+    { id: '740', name: 'Counter-Strike: Global Offensive', appId: '740' },
     { id: '4020', name: "Garry's Mod", appId: '4020' },
     { id: '232250', name: 'Team Fortress 2', appId: '232250' },
-    { id: '740', name: 'Counter-Strike: Global Offensive', appId: '740' },
-    { id: '4940', name: 'Counter-Strike: Source', appId: '4940' },
-    { id: '222860', name: 'Left 4 Dead 2', appId: '222860' },
     { id: '222840', name: 'Left 4 Dead', appId: '222840' },
     { id: '1007', name: 'Half-Life 2: Deathmatch', appId: '1007' },
     { id: '232290', name: 'Day of Defeat: Source', appId: '232290' },
@@ -25,6 +21,7 @@ const GAMES = [
 ];
 
 export default function Installer() {
+    console.log('Installer component rendering...');
     const [selectedGame, setSelectedGame] = useState('');
     const [installPath, setInstallPath] = useState('C:\\Games\\');
     const [installing, setInstalling] = useState(false);
@@ -36,40 +33,35 @@ export default function Installer() {
     const [useCache, setUseCache] = useState(false);
     const [cacheStatus, setCacheStatus] = useState({});
 
-    // Fetch templates when game changes
-    useEffect(() => {
-        if (selectedGame) {
-            fetchTemplates(selectedGame);
-            checkCacheStatus(selectedGame);
-        }
-    }, [selectedGame]);
-
-    const checkCacheStatus = async (gameId) => {
+    const fetchTemplates = async () => {
         try {
-            const res = await axios.get(`http://localhost:3000/api/cache/status/${gameId}`);
-            setCacheStatus(res.data);
-        } catch (err) {
-            console.error('Error checking cache:', err);
-            setCacheStatus({});
-        }
-    };
-
-    const fetchTemplates = async (gameId) => {
-        try {
-            const res = await axios.get(`http://localhost:3000/api/templates/${gameId}`);
-            setTemplates(res.data);
+            // In a real app, fetch from backend. For now, use defaults or mock.
+            // const res = await axios.get(`/api/templates/${selectedGame}`);
+            // setTemplates(res.data);
+            setTemplates({ 'Default': { port: 27015, maxPlayers: 32, defaultMap: 'gm_construct' } });
             setSelectedTemplate('Default');
-            // Set default hostname and port from template
-            const defaultTemplate = res.data['Default'];
-            if (defaultTemplate) {
-                const game = GAMES.find(g => g.id === gameId);
-                setHostname(game?.name + ' Server' || 'My Server');
-                setPort(''); // Empty means use default
-            }
+            setPort('');
         } catch (err) {
             console.error('Failed to fetch templates:', err);
         }
     };
+
+    const checkCacheStatus = useCallback(async () => {
+        try {
+            const res = await axios.get(`/api/cache/status/${selectedGame}`);
+            setCacheStatus(res.data);
+        } catch (err) {
+            console.error('Failed to check cache status:', err);
+            setCacheStatus({});
+        }
+    }, [selectedGame]);
+
+    useEffect(() => {
+        if (selectedGame) {
+            fetchTemplates();
+            checkCacheStatus();
+        }
+    }, [selectedGame, checkCacheStatus]);
 
     const handleInstall = async () => {
         if (!selectedGame) {
@@ -77,43 +69,38 @@ export default function Installer() {
             return;
         }
 
-        const game = GAMES.find(g => g.id === selectedGame);
-        if (!game) return;
-
         setInstalling(true);
-        setLogs([`Starting installation for ${game.name}...`]);
+        setLogs([]);
 
-        // Listen for logs
-        const logHandler = (log) => {
-            setLogs(prev => [...prev, log]);
+        const socket = io('http://localhost:3000');
+        const logHandler = (data) => {
+            setLogs(prev => [...prev, data]);
         };
         socket.on('install-log', logHandler);
 
         try {
-            const response = await axios.post('http://localhost:3000/api/install', {
-                appId: game.appId,
-                gameName: game.name,
-                installPath: installPath + game.name.replace(/[^a-zA-Z0-9]/g, ''),
-                templateName: selectedTemplate,
-                hostname: hostname || (game.name + ' Server'),
-                port: port ? parseInt(port) : undefined,
-                useCache: useCache // Pass cache option to backend
+            const res = await axios.post('/api/install', {
+                gameId: selectedGame,
+                installPath,
+                template: selectedTemplate,
+                hostname,
+                port,
+                useCache
             });
 
-            if (response.data.success) {
+            if (res.data.success) {
                 setLogs(prev => [...prev, 'Installation completed successfully!']);
-                setInstalling(false);
                 setSelectedGame('');
             } else {
-                setLogs(prev => [...prev, `Error: ${response.data.error || 'Installation failed'}`]);
-                setInstalling(false);
+                setLogs(prev => [...prev, `Error: ${res.data.error || 'Installation failed'}`]);
             }
         } catch (err) {
             const errorMessage = err.response?.data?.error || err.message;
             setLogs(prev => [...prev, `Error: ${errorMessage}`]);
-            setInstalling(false);
         } finally {
+            setInstalling(false);
             socket.off('install-log', logHandler);
+            socket.disconnect();
         }
     };
 

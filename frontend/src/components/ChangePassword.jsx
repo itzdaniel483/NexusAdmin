@@ -32,7 +32,7 @@ function ChangePassword() {
         setLoading(true);
 
         try {
-            await axios.post('http://localhost:3000/api/users/change-password', {
+            await axios.post('/api/users/change-password', {
                 currentPassword,
                 newPassword
             });

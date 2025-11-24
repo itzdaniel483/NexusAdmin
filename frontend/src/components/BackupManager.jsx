@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { Archive, RotateCcw, Trash2, Plus, Clock, HardDrive } from 'lucide-react';
 
@@ -9,26 +9,32 @@ function BackupManager({ serverId }) {
     const [restoring, setRestoring] = useState(null);
     const [deleting, setDeleting] = useState(null);
 
-    useEffect(() => {
-        fetchBackups();
-    }, [serverId]);
-
-    const fetchBackups = async () => {
+    const fetchBackups = useCallback(async () => {
+        if (!serverId) {
+            console.error('serverId is undefined');
+            setLoading(false);
+            return;
+        }
         setLoading(true);
         try {
-            const res = await axios.get(`http://localhost:3000/api/server/${serverId}/backups`);
-            setBackups(res.data);
+            const res = await axios.get(`/api/server/${serverId}/backups`);
+            setBackups(Array.isArray(res.data) ? res.data : []);
         } catch (err) {
             console.error('Failed to fetch backups:', err);
+            setBackups([]);
         } finally {
             setLoading(false);
         }
-    };
+    }, [serverId]);
+
+    useEffect(() => {
+        fetchBackups();
+    }, [fetchBackups]);
 
     const createBackup = async () => {
         setCreating(true);
         try {
-            await axios.post(`http://localhost:3000/api/server/${serverId}/backups`);
+            await axios.post(`/api/server/${serverId}/backups`);
             await fetchBackups();
             alert('Backup created successfully!');
         } catch (err) {
@@ -43,7 +49,7 @@ function BackupManager({ serverId }) {
 
         setRestoring(filename);
         try {
-            await axios.post(`http://localhost:3000/api/server/${serverId}/backups/restore`, { filename });
+            await axios.post(`/api/server/${serverId}/backups/restore`, { filename });
             alert('Server restored successfully!');
         } catch (err) {
             alert(`Restore failed: ${err.response?.data?.error || err.message}`);
@@ -57,7 +63,7 @@ function BackupManager({ serverId }) {
 
         setDeleting(filename);
         try {
-            await axios.delete(`http://localhost:3000/api/server/${serverId}/backups/${filename}`);
+            await axios.delete(`/api/server/${serverId}/backups/${filename}`);
             await fetchBackups();
         } catch (err) {
             alert(`Delete failed: ${err.response?.data?.error || err.message}`);

@@ -5,48 +5,36 @@ import { User, Lock, AlertCircle, Shield } from 'lucide-react';
 function Login({ onLogin }) {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
     const [authMode, setAuthMode] = useState('local');
     const [loadingSettings, setLoadingSettings] = useState(true);
 
     useEffect(() => {
-        // Fetch auth mode from settings
-        const fetchSettings = async () => {
-            try {
-                const res = await axios.get('http://localhost:3000/api/settings');
-                setAuthMode(res.data.authMode || 'local');
-            } catch (err) {
-                console.error('Failed to fetch settings:', err);
-                setAuthMode('local'); // Default to local if fetch fails
-            } finally {
-                setLoadingSettings(false);
-            }
-        };
         fetchSettings();
     }, []);
 
+    const fetchSettings = async () => {
+        try {
+            const res = await axios.get('/api/settings');
+            setAuthMode(res.data.authMode || 'local');
+        } catch (err) {
+            console.error('Failed to fetch settings:', err);
+        } finally {
+            setLoadingSettings(false);
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError('');
         setLoading(true);
+        setError('');
 
         try {
-            const res = await axios.post('http://localhost:3000/api/login', {
-                username,
-                password
-            });
-
+            const res = await axios.post('/api/login', { username, password });
             const { token, user } = res.data;
-
-            // Store token and user info
             localStorage.setItem('token', token);
-            localStorage.setItem('user', JSON.stringify(user));
-
-            // Set axios default header
             axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-
-            // Call parent callback
             onLogin(user);
         } catch (err) {
             setError(err.response?.data?.error || 'Login failed. Please try again.');

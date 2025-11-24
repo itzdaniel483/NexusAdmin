@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { Folder, File, ChevronRight, Save, X, FileText, Code, Settings as SettingsIcon } from 'lucide-react';
+import { Folder, File, ChevronRight, Save, X, FileText, Code } from 'lucide-react';
 
 function FileManager({ serverId }) {
     const [currentPath, setCurrentPath] = useState('');
@@ -10,34 +10,49 @@ function FileManager({ serverId }) {
     const [saving, setSaving] = useState(false);
     const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
-        loadDirectory(currentPath);
-    }, [currentPath, serverId]);
-
-    const loadDirectory = async (path) => {
+    const fetchFiles = useCallback(async () => {
+        if (!serverId) {
+            console.error('serverId is undefined');
+            setLoading(false);
+            return;
+        }
         setLoading(true);
         try {
-            const res = await axios.get(`http://localhost:3000/api/server/${serverId}/files`, {
-                params: { path }
+            const res = await axios.get(`/api/server/${serverId}/files`, {
+                params: { path: currentPath }
             });
-            setFiles(res.data.files);
+            // Ensure res.data.files is an array
+            setFiles(Array.isArray(res.data.files) ? res.data.files : []);
         } catch (err) {
-            console.error('Failed to load directory:', err);
+            console.error('Failed to fetch files:', err);
+            setFiles([]);
         } finally {
             setLoading(false);
         }
-    };
+    }, [currentPath, serverId]);
+
+    useEffect(() => {
+        fetchFiles();
+    }, [fetchFiles]);
+
+    useEffect(() => {
+        setSaving(false);
+    }, [selectedFile]);
 
     const loadFile = async (fileName) => {
-        const filePath = currentPath ? `${currentPath}/${fileName}` : fileName;
+        const fullPath = currentPath ? `${currentPath}/${fileName}` : fileName;
+        setSelectedFile(fullPath);
+        setLoading(true);
         try {
-            const res = await axios.get(`http://localhost:3000/api/server/${serverId}/file`, {
-                params: { path: filePath }
+            const res = await axios.get(`/api/server/${serverId}/files/content`, {
+                params: { path: fullPath }
             });
             setFileContent(res.data.content);
-            setSelectedFile(filePath);
         } catch (err) {
-            alert(`Error: ${err.response?.data?.error || err.message}`);
+            console.error('Failed to load file:', err);
+            setFileContent('');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -45,13 +60,12 @@ function FileManager({ serverId }) {
         if (!selectedFile) return;
         setSaving(true);
         try {
-            await axios.post(`http://localhost:3000/api/server/${serverId}/file`, {
+            await axios.post(`/api/server/${serverId}/files/save`, {
                 path: selectedFile,
                 content: fileContent
             });
-            alert('File saved! Backup created.');
-        } catch (err) {
-            alert(`Save failed: ${err.response?.data?.error || err.message}`);
+        } catch {
+            alert('Failed to save file');
         } finally {
             setSaving(false);
         }
@@ -119,7 +133,7 @@ function FileManager({ serverId }) {
                             <span>..</span>
                         </button>
                     )}
-                    {loading ? (
+                    {loading && !selectedFile ? (
                         <div className="text-center text-gray-500 py-8">Loading...</div>
                     ) : (
                         <>
@@ -138,8 +152,8 @@ function FileManager({ serverId }) {
                                     key={file.name}
                                     onClick={() => loadFile(file.name)}
                                     className={`w-full text-left px-3 py-2 hover:bg-gray-800/50 rounded-lg flex items-center space-x-2 text-sm ${selectedFile === (currentPath ? `${currentPath}/${file.name}` : file.name)
-                                            ? 'bg-blue-600/20 text-blue-300'
-                                            : 'text-gray-300'
+                                        ? 'bg-blue-600/20 text-blue-300'
+                                        : 'text-gray-300'
                                         }`}
                                 >
                                     {getFileIcon(file.name)}

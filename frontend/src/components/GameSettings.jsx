@@ -6,38 +6,51 @@ function GameSettings() {
     const [games, setGames] = useState([]);
     const [selectedGame, setSelectedGame] = useState(null);
     const [templates, setTemplates] = useState({});
-    const [editingTemplate, setEditingTemplate] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-
-    useEffect(() => {
-        fetchGames();
-    }, []);
-
-    useEffect(() => {
-        if (selectedGame) {
-            fetchTemplates(selectedGame.id);
-        }
-    }, [selectedGame]);
+    const [editingTemplate, setEditingTemplate] = useState(null);
 
     const fetchGames = async () => {
         try {
-            const res = await axios.get('http://localhost:3000/api/templates');
-            setGames(res.data);
-            if (res.data.length > 0 && !selectedGame) {
-                setSelectedGame(res.data[0]);
-            }
-        } catch (err) {
-            console.error('Failed to fetch games:', err);
+            const response = await axios.get('/api/games');
+            setGames(response.data);
+        } catch (error) {
+            console.error('Failed to fetch games:', error);
         }
     };
 
     const fetchTemplates = async (gameId) => {
         try {
-            const res = await axios.get(`http://localhost:3000/api/templates/${gameId}`);
-            setTemplates(res.data);
-        } catch (err) {
-            console.error('Failed to fetch templates:', err);
+            const response = await axios.get(`/api/games/${gameId}/templates`);
+            setTemplates(response.data);
+        } catch (error) {
+            console.error('Failed to fetch templates:', error);
         }
+    };
+
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        fetchGames();
+    }, []);
+
+    useEffect(() => {
+        if (selectedGame) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            fetchTemplates(selectedGame.id);
+        } else {
+            setTemplates({});
+        }
+    }, [selectedGame]);
+
+    const handleCreateTemplate = () => {
+        setEditingTemplate({
+            name: 'New Template',
+            executable: '',
+            args: [],
+            port: 27015,
+            maxPlayers: 32,
+            defaultMap: ''
+        });
+        setIsModalOpen(true);
     };
 
     const handleEditTemplate = (templateName) => {
@@ -48,55 +61,28 @@ function GameSettings() {
         setIsModalOpen(true);
     };
 
-    const handleCreateTemplate = () => {
-        const defaultTemplate = templates['Default'];
-        setEditingTemplate({
-            name: 'New Template',
-            executable: defaultTemplate.executable,
-            args: [...defaultTemplate.args],
-            port: defaultTemplate.port,
-            maxPlayers: defaultTemplate.maxPlayers,
-            defaultMap: defaultTemplate.defaultMap
-        });
-        setIsModalOpen(true);
+    const handleDeleteTemplate = async (templateName) => {
+        if (!confirm(`Are you sure you want to delete template "${templateName}"?`)) return;
+        try {
+            await axios.delete(`/api/games/${selectedGame.id}/templates/${templateName}`);
+            fetchTemplates(selectedGame.id);
+        } catch (error) {
+            console.error('Failed to delete template:', error);
+        }
     };
 
     const handleSaveTemplate = async () => {
         try {
-            const { name, ...config } = editingTemplate;
-            await axios.post(
-                `http://localhost:3000/api/templates/${selectedGame.id}/${name}`,
-                config
-            );
+            await axios.post(`/api/games/${selectedGame.id}/templates`, editingTemplate);
             setIsModalOpen(false);
-            setEditingTemplate(null);
             fetchTemplates(selectedGame.id);
-        } catch (err) {
-            alert('Failed to save template: ' + err.message);
-        }
-    };
-
-    const handleDeleteTemplate = async (templateName) => {
-        if (!confirm(`Delete template "${templateName}"?`)) return;
-
-        try {
-            await axios.delete(`http://localhost:3000/api/templates/${selectedGame.id}/${templateName}`);
-            fetchTemplates(selectedGame.id);
-        } catch (err) {
-            alert('Failed to delete template: ' + (err.response?.data?.error || err.message));
+        } catch (error) {
+            console.error('Failed to save template:', error);
         }
     };
 
     const updateTemplateField = (field, value) => {
         setEditingTemplate(prev => ({ ...prev, [field]: value }));
-    };
-
-    const updateArg = (index, value) => {
-        setEditingTemplate(prev => {
-            const newArgs = [...prev.args];
-            newArgs[index] = value;
-            return { ...prev, args: newArgs };
-        });
     };
 
     const addArg = () => {
@@ -111,6 +97,14 @@ function GameSettings() {
             ...prev,
             args: prev.args.filter((_, i) => i !== index)
         }));
+    };
+
+    const updateArg = (index, value) => {
+        setEditingTemplate(prev => {
+            const newArgs = [...prev.args];
+            newArgs[index] = value;
+            return { ...prev, args: newArgs };
+        });
     };
 
     return (
@@ -128,6 +122,7 @@ function GameSettings() {
                     onChange={(e) => setSelectedGame(games.find(g => g.id === e.target.value))}
                     className="w-full bg-gray-900 text-white border border-gray-700 rounded-lg px-4 py-3 focus:border-blue-500 focus:outline-none"
                 >
+                    <option value="">Select a game...</option>
                     {games.map(game => (
                         <option key={game.id} value={game.id}>
                             {game.name} ({game.templateCount} template{game.templateCount !== 1 ? 's' : ''})

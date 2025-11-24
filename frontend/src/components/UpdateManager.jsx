@@ -3,7 +3,7 @@ import axios from 'axios';
 import { RefreshCw, Download, CheckCircle, AlertCircle } from 'lucide-react';
 import io from 'socket.io-client';
 
-const socket = io('http://localhost:3000');
+const socket = io();
 
 function UpdateManager({ server }) {
     const [updating, setUpdating] = useState(false);
@@ -12,13 +12,17 @@ function UpdateManager({ server }) {
     const [updateError, setUpdateError] = useState(null);
 
     const handleUpdate = async () => {
+        if (!server || !server.id) {
+            setUpdateError('Server information is missing');
+            return;
+        }
         setUpdating(true);
         setLogs([]);
         setUpdateComplete(false);
         setUpdateError(null);
 
         try {
-            await axios.post(`http://localhost:3000/api/server/${server.id}/update`);
+            await axios.post(`/api/server/${server.id}/update`);
         } catch (err) {
             setUpdateError(err.response?.data?.error || 'Failed to start update');
             setUpdating(false);
@@ -26,6 +30,11 @@ function UpdateManager({ server }) {
     };
 
     React.useEffect(() => {
+        if (!server || !server.id) {
+            console.error('Server or server.id is undefined in UpdateManager');
+            return;
+        }
+
         const handleLog = (log) => {
             setLogs(prev => [...prev, log]);
         };
@@ -46,7 +55,7 @@ function UpdateManager({ server }) {
             socket.off(`update-log-${server.id}`, handleLog);
             socket.off(`update-complete-${server.id}`, handleComplete);
         };
-    }, [server.id]);
+    }, [server]);
 
     return (
         <div className="space-y-4">
@@ -65,8 +74,8 @@ function UpdateManager({ server }) {
                         onClick={handleUpdate}
                         disabled={updating}
                         className={`px-4 py-2 rounded-lg font-medium flex items-center gap-2 ${updating
-                                ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                                : 'bg-blue-600 hover:bg-blue-500 text-white'
+                            ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                            : 'bg-blue-600 hover:bg-blue-500 text-white'
                             }`}
                     >
                         <RefreshCw size={16} className={updating ? 'animate-spin' : ''} />

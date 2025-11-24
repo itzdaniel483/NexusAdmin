@@ -50,6 +50,19 @@ class SteamCMD {
         });
     }
 
+    async createServerConfig(installPath, gameDir, rconPassword, hostname) {
+        const cfgPath = path.join(installPath, gameDir, 'cfg', 'server.cfg');
+        await fs.ensureDir(path.dirname(cfgPath));
+
+        const content = `
+hostname "${hostname}"
+rcon_password "${rconPassword}"
+        `.trim();
+
+        await fs.writeFile(cfgPath, content);
+        console.log(`Created server config at ${cfgPath}`);
+    }
+
     async install(appId, installPath, onLog) {
         if (!this.ready) await this.init();
 

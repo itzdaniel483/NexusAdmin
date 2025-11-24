@@ -218,7 +218,27 @@ app.post('/api/install', async (req, res) => {
         let args = [...defaults.args];
         const serverPort = port || defaults.port || 27015;
 
-        // Remove existing port arg if present
+        // Extract game directory from args (usually follows -game)
+        const gameDirIndex = args.indexOf('-game');
+        const gameDir = gameDirIndex !== -1 ? args[gameDirIndex + 1] : gameName.toLowerCase().replace(/\s+/g, '');
+
+        // Create new server object
+        const newServer = {
+            id: Date.now().toString(),
+            name: hostname || gameName,
+            game: gameName,
+            appId: appId,
+            path: installPath,
+            port: serverPort,
+            rconPassword: Math.random().toString(36).slice(-8),
+            status: 'stopped',
+            owner: req.user ? req.user.username : 'admin',
+            executable: defaults.executable,
+            args: args
+        };
+
+        // Add to store
+        serverStore.add(newServer);
 
         await steamcmd.createServerConfig(
             installPath,
@@ -636,7 +656,7 @@ app.get('/api/server/:id/workshop/search', async (req, res) => {
         // Use server key or global key
         let apiKey = srv.steamApiKey;
         if (!apiKey) {
-            const settings = settingsStore.getSettings();
+            const settings = await settingsStore.getSettings();
             apiKey = settings.steamApiKey;
         }
 

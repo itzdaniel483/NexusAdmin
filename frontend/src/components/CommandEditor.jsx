@@ -53,7 +53,7 @@ function CommandEditor({ serverId, serverData }) {
         const schedule = schedulePreset === 'custom' ? customSchedule : schedulePreset;
 
         try {
-            await axios.post(`http://localhost:3000/api/server/${serverId}/schedule`, {
+            await axios.post(`/api/server/${serverId}/schedule`, {
                 schedule: schedule || null
             });
             alert('Schedule updated!');
@@ -97,7 +97,7 @@ function CommandEditor({ serverId, serverData }) {
     const saveConfig = async () => {
         setSaving(true);
         try {
-            await axios.put(`http://localhost:3000/api/server/${serverId}/config`, {
+            await axios.put(`/api/server/${serverId}/config`, {
                 executable,
                 args
             });

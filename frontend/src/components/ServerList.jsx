@@ -5,15 +5,21 @@ import { Play, Square, Terminal, Trash2, Settings } from 'lucide-react';
 function ServerList({ onSelectServer }) {
     const [servers, setServers] = useState([]);
 
+    const fetchServers = async () => {
+        try {
+            const res = await axios.get('/api/servers');
+            setServers(res.data);
+        } catch (err) {
+            console.error('Failed to fetch servers:', err);
+        }
+    };
+
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         fetchServers();
         const interval = setInterval(fetchServers, 5000);
 
         // Listen for status updates
-        const handleStatusUpdate = ({ id, status }) => {
-            setServers(prev => prev.map(s => s.id === id ? { ...s, status } : s));
-        };
-
         // We need a way to listen to ALL server status updates, or we rely on polling.
         // Since the backend emits `server-status-${id}`, we can't easily listen to all without knowing IDs.
         // However, we can modify the backend to emit a generic 'servers-updated' event or just rely on polling.
@@ -24,19 +30,12 @@ function ServerList({ onSelectServer }) {
         return () => clearInterval(interval);
     }, []);
 
-    const fetchServers = async () => {
-        try {
-            const res = await axios.get('http://localhost:3000/api/servers');
-            setServers(res.data);
-        } catch (err) {
-            console.error('Failed to fetch servers:', err);
-        }
-    };
+
 
     const deleteServer = async (id) => {
         if (!confirm('Are you sure you want to delete this server?')) return;
         try {
-            await axios.delete(`http://localhost:3000/api/server/${id}`);
+            await axios.delete(`/api/server/${id}`);
             fetchServers();
         } catch (err) {
             console.error(err);
@@ -98,7 +97,7 @@ function ServerList({ onSelectServer }) {
                                                 <button
                                                     onClick={async () => {
                                                         try {
-                                                            await axios.post('http://localhost:3000/api/server/start', { id: server.id });
+                                                            await axios.post('/api/server/start', { id: server.id });
                                                             fetchServers();
                                                         } catch (err) {
                                                             console.error(err);
@@ -115,8 +114,8 @@ function ServerList({ onSelectServer }) {
                                                     <button
                                                         onClick={async () => {
                                                             try {
-                                                                await axios.post('http://localhost:3000/api/server/stop', { id: server.id });
-                                                                await axios.post('http://localhost:3000/api/server/start', { id: server.id });
+                                                                await axios.post('/api/server/stop', { id: server.id });
+                                                                await axios.post('/api/server/start', { id: server.id });
                                                                 fetchServers();
                                                             } catch (err) {
                                                                 console.error(err);
@@ -130,7 +129,7 @@ function ServerList({ onSelectServer }) {
                                                     <button
                                                         onClick={async () => {
                                                             try {
-                                                                await axios.post('http://localhost:3000/api/server/stop', { id: server.id });
+                                                                await axios.post('/api/server/stop', { id: server.id });
                                                                 fetchServers();
                                                             } catch (err) {
                                                                 console.error(err);

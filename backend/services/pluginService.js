@@ -7,15 +7,29 @@ const serverStore = require('./serverStore');
 const PLUGINS = {
     metamod: {
         name: 'Metamod: Source',
+        type: 'alliedmods',
         baseUrl: 'https://mms.alliedmods.net/mmsdrop/1.12/',
         latestFile: 'mmsource-latest-windows',
-        checkFile: 'addons/metamod.vdf' // File to check if installed
+        checkFile: 'addons/metamod.vdf'
     },
     sourcemod: {
         name: 'SourceMod',
+        type: 'alliedmods',
         baseUrl: 'https://sm.alliedmods.net/smdrop/1.13/',
         latestFile: 'sourcemod-latest-windows',
         checkFile: 'addons/sourcemod/bin/sourcemod_mm.dll'
+    },
+    ulib: {
+        name: 'ULib',
+        type: 'direct',
+        url: 'https://github.com/TeamUlysses/ulib/archive/refs/heads/master.zip',
+        checkFile: 'addons/ulib/lua/ulib/init.lua'
+    },
+    ulx: {
+        name: 'ULX',
+        type: 'direct',
+        url: 'https://github.com/TeamUlysses/ulx/archive/refs/heads/master.zip',
+        checkFile: 'addons/ulx/lua/ulx/init.lua'
     }
 };
 
@@ -50,11 +64,20 @@ class PluginService {
         const gameDir = this.getGameDir(server.game);
         const targetDir = path.join(installPath, gameDir);
 
-        // 1. Get latest filename
-        console.log(`[Plugin] Fetching latest version for ${pluginId}...`);
-        const versionRes = await axios.get(pluginConfig.baseUrl + pluginConfig.latestFile);
-        const filename = versionRes.data.trim();
-        const downloadUrl = pluginConfig.baseUrl + filename;
+        let downloadUrl;
+        let filename;
+
+        if (pluginConfig.type === 'alliedmods') {
+            // 1. Get latest filename
+            console.log(`[Plugin] Fetching latest version for ${pluginId}...`);
+            const versionRes = await axios.get(pluginConfig.baseUrl + pluginConfig.latestFile);
+            filename = versionRes.data.trim();
+            downloadUrl = pluginConfig.baseUrl + filename;
+        } else {
+            // Direct download
+            downloadUrl = pluginConfig.url;
+            filename = `${pluginId}.zip`;
+        }
 
         // 2. Download file
         console.log(`[Plugin] Downloading ${filename}...`);
