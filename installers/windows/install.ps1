@@ -1,14 +1,3 @@
-# NexusAdmin Installation Script for Windows
-# Run this script in PowerShell as Administrator
-
-Write-Host "=========================================" -ForegroundColor Cyan
-Write-Host "      NexusAdmin Installer (Windows)     " -ForegroundColor Cyan
-Write-Host "=========================================" -ForegroundColor Cyan
-Write-Host ""
-
-# Check for Administrator privileges
-$currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
-if (-not $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
     Write-Host "Error: This script must be run as Administrator." -ForegroundColor Red
     Write-Host "Please right-click and select 'Run as Administrator'." -ForegroundColor Yellow
     exit

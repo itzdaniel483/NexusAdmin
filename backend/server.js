@@ -261,6 +261,20 @@ app.post('/api/server/start', async (req, res) => {
     if (!srv) return res.status(404).json({ error: 'Server not found' });
 
     try {
+        // Safety check for missing executable/args (legacy data support)
+        if (!srv.executable) {
+            const defaults = GAME_DEFAULTS[srv.appId];
+            if (defaults) {
+                console.log(`Server ${srv.name} missing executable, using default: ${defaults.executable}`);
+                srv.executable = defaults.executable;
+                srv.args = srv.args || defaults.args;
+                // Save these fixes to the store
+                await serverStore.updateServerConfig(id, { executable: srv.executable, args: srv.args });
+            } else {
+                return res.status(500).json({ error: 'Server configuration missing executable path. Please reinstall or update config.' });
+            }
+        }
+
         // Construct full executable path
         const execPath = path.isAbsolute(srv.executable)
             ? srv.executable

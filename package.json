@@ -1,7 +1,7 @@
 {
-    "name": "nexus-admin",
+    "name": "serverforge",
     "version": "1.0.0",
-    "description": "NexusAdmin Game Server Manager",
+    "description": "ServerForge - Modern Game Server Management Panel",
     "scripts": {
         "start": "npm start --prefix backend",
         "dev": "npm run dev --prefix backend",

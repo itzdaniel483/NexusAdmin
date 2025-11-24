@@ -1,7 +1,7 @@
-# Package NexusAdmin for Release
+# Package ServerForge for Release
 
 $version = "v1.0"
-$releaseName = "NexusAdmin_$version"
+$releaseName = "ServerForge_$version"
 $releaseDir = "release\$releaseName"
 $zipFile = "release\$releaseName.zip"
 

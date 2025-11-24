@@ -65,7 +65,7 @@ function Login({ onLogin }) {
                         {/* Logo */}
                         <div className="text-center mb-8">
                             <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 tracking-tight mb-2">
-                                NEXUS<span className="font-light text-gray-400">ADMIN</span>
+                                SERVER<span className="font-light text-gray-400">FORGE</span>
                             </h1>
                             <p className="text-sm text-gray-500 font-medium tracking-wider uppercase">
                                 Server Management System
@@ -112,7 +112,7 @@ function Login({ onLogin }) {
                     {/* Logo */}
                     <div className="text-center mb-8">
                         <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 tracking-tight mb-2">
-                            NEXUS<span className="font-light text-gray-400">ADMIN</span>
+                            SERVER<span className="font-light text-gray-400">FORGE</span>
                         </h1>
                         <p className="text-sm text-gray-500 font-medium tracking-wider uppercase">
                             Server Management System

@@ -97,13 +97,13 @@ function App() {
           {!sidebarCollapsed ? (
             <>
               <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 tracking-tight">
-                NEXUS<span className="font-light text-gray-400">ADMIN</span>
+                SERVER<span className="font-light text-gray-400">FORGE</span>
               </h1>
               <p className="text-xs text-gray-500 mt-1 font-medium tracking-wider uppercase">Server Management System</p>
             </>
           ) : (
             <div className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 text-center">
-              N
+              S
             </div>
           )}
         </div>
