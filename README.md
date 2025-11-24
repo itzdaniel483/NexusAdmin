@@ -41,7 +41,8 @@ Built for speed, security, and ease of use.
     .\installers\windows\install.ps1
     ```
 2.  **Start the panel:**
-    ```cd ..
+    ```
+    cd ..
     npm start
     ```
 3.  **Login:** Open `http://localhost:5173`
