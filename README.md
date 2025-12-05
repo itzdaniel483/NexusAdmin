@@ -64,7 +64,11 @@ Built for speed, security, and ease of use.
 
 Docker deployment provides easy multi-instance support and simplified deployment to platforms like Dokploy.
 
-1.  **Build and run with Docker Compose:**
+1.  **Setup environment:**
+    ```bash
+    copy .env.example .env
+    ```
+2.  **Build and run:**
     ```bash
     docker-compose up -d
     ```

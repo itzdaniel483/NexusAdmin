@@ -75,6 +75,11 @@ All configuration is done via environment variables. Here's a complete reference
 | `CACHE_DIR` | Cache directory inside container | `/app/cache` | No |
 | `SERVERS_DIR` | Servers directory inside container | `/app/servers` | No |
 
+### Understanding JWT_SECRET
+**What is it?** A master key used to sign login tokens.
+**Why do I need it?** It prevents attackers from forging "Admin" badges. Even if you are the only user, it secures your session.
+**What do I put?** Any long, random string (e.g., `my-super-secret-key-12345`). Each instance (Panel 1 vs Panel 2) should have a *unique* secret.
+
 ### Generating a Secure JWT Secret
 
 **Windows (PowerShell)**:
@@ -121,13 +126,15 @@ docker run -d \
   -p 3000:3000 \
   -e PORT=3000 \
   -e APP_URL=http://localhost:3000 \
-  -e JWT_SECRET=your-secret-here \
+  -e JWT_SECRET=change_me_to_something_random_123 \
   -v serverforge_data:/app/data \
   -v serverforge_cache:/app/cache \
   -v serverforge_servers:/app/servers \
   -v serverforge_backups:/app/backups \
   serverforge:latest
 ```
+> **Note:** Replace `change_me_to_something_random_123` with your own random string.
+
 
 ### Using Docker Compose
 
@@ -304,12 +311,19 @@ docker logs serverforge
 - Port already in use
 - Insufficient permissions for volumes
 
+### Application Running on Wrong Port
+If logs say `Running on port 3000` but you set `PORT=5173`:
+- Ensure the `PORT` environment variable is set in Dokploy
+- **Redeploy** the application for changes to take effect
+- **Recommended**: Keep application running on internal port 3000 and use Dokploy's port mapping (e.g., External 80 -> Internal 3000)
+
 ### Frontend Can't Connect to Backend
 
 **Verify environment variables**:
 ```bash
 docker exec serverforge env | grep APP_URL
 ```
+
 
 **Check if backend is running**:
 ```bash
