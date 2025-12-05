@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# NexusAdmin Installation Script for Linux/macOS
+# ServerForge Installation Script for Linux/macOS
 # Run this script with: chmod +x install.sh && ./install.sh
 
 GREEN='\033[0;32m'
@@ -80,7 +80,7 @@ echo -e "${GREEN}=========================================${NC}"
 echo -e "${GREEN}      Installation Complete!             ${NC}"
 echo -e "${GREEN}=========================================${NC}"
 echo ""
-echo -e "${CYAN}To start NexusAdmin:${NC}"
+echo -e "${CYAN}To start ServerForge:${NC}"
 echo "1. Go to the root folder: cd ../.."
 echo "2. Run: npm start"
 echo ""

@@ -1,6 +1,6 @@
-    Write-Host "Error: This script must be run as Administrator." -ForegroundColor Red
-    Write-Host "Please right-click and select 'Run as Administrator'." -ForegroundColor Yellow
-    exit
+Write-Host "Error: This script must be run as Administrator." -ForegroundColor Red
+Write-Host "Please right-click and select 'Run as Administrator'." -ForegroundColor Yellow
+exit
 }
 
 # 1. Check for Node.js
@@ -90,7 +90,7 @@ Write-Host "=========================================" -ForegroundColor Green
 Write-Host "      Installation Complete!             " -ForegroundColor Green
 Write-Host "=========================================" -ForegroundColor Green
 Write-Host ""
-Write-Host "To start NexusAdmin:" -ForegroundColor Cyan
+Write-Host "To start ServerForge:" -ForegroundColor Cyan
 Write-Host "1. Open a terminal in the root folder" -ForegroundColor White
 Write-Host "2. Run: npm start" -ForegroundColor White
 Write-Host ""
