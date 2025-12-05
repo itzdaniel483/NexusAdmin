@@ -71,18 +71,22 @@ steamcmd.init();
 })();
 
 
+
 // Serve static frontend files in production (BEFORE Auth Middleware)
 // Check both Docker path (./frontend/dist) and development path (../frontend/dist)
+console.log('__dirname:', __dirname);
 let frontendPath = path.join(__dirname, 'frontend/dist');
+console.log('Checking Docker path:', frontendPath, '- Exists:', fs.existsSync(frontendPath));
 if (!fs.existsSync(frontendPath)) {
     frontendPath = path.join(__dirname, '../frontend/dist');
+    console.log('Checking dev path:', frontendPath, '- Exists:', fs.existsSync(frontendPath));
 }
 
 if (fs.existsSync(frontendPath)) {
-    console.log('Serving frontend from:', frontendPath);
+    console.log('✅ Serving frontend from:', frontendPath);
     app.use(express.static(frontendPath));
 } else {
-    console.log('Frontend build not found at:', frontendPath);
+    console.log('❌ Frontend build not found at:', frontendPath);
 }
 
 
