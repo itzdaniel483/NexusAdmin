@@ -20,6 +20,13 @@ class SettingsStore {
             if (data) {
                 this.settings = { ...this.settings, ...JSON.parse(data) };
             }
+
+            // Environment variable overrides (Higher priority than file)
+            // Allows fixing lockout via Docker env vars
+            if (process.env.AUTH_MODE) {
+                console.log(`[Settings] Overriding Auth Mode via ENV: ${process.env.AUTH_MODE}`);
+                this.settings.authMode = process.env.AUTH_MODE;
+            }
         } catch (err) {
             console.error('Failed to load settings:', err);
         }
