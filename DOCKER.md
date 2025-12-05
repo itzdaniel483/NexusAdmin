@@ -317,6 +317,12 @@ If logs say `Running on port 3000` but you set `PORT=5173`:
 - **Redeploy** the application for changes to take effect
 - **Recommended**: Keep application running on internal port 3000 and use Dokploy's port mapping (e.g., External 80 -> Internal 3000)
 
+### Locked Out? (Auth Mode Issues)
+If you enabled SSO/Zero Trust but can't login:
+1. Add environment variable: `AUTH_MODE=local`
+2. **Redeploy** the application
+3. This forces the panel back to "Username/Password" mode.
+
 ### Frontend Can't Connect to Backend
 
 **Verify environment variables**:
