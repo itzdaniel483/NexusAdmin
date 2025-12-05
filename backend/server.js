@@ -29,8 +29,14 @@ const io = new Server(server, {
 app.use(cors());
 app.use(express.json());
 
-// Kill all orphaned srcds.exe processes on startup
+// Kill all orphaned srcds.exe processes on startup (Windows only)
 function cleanupOrphanedProcesses() {
+    // Skip cleanup on Linux/Docker (process management handled differently)
+    if (process.platform !== 'win32') {
+        console.log('Skipping Windows-specific process cleanup (running on', process.platform + ')');
+        return;
+    }
+
     console.log('Cleaning up orphaned server processes...');
     const cleanup = spawn('powershell', [
         '-NoProfile',
@@ -40,6 +46,10 @@ function cleanupOrphanedProcesses() {
 
     cleanup.on('close', (code) => {
         console.log('Process cleanup complete.');
+    });
+
+    cleanup.on('error', (err) => {
+        console.log('Process cleanup skipped:', err.message);
     });
 }
 
