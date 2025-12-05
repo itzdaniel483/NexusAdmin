@@ -21,7 +21,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: "*",
+        origin: process.env.APP_URL || "*",
         methods: ["GET", "POST"]
     }
 });
@@ -93,6 +93,16 @@ app.post('/api/login', async (req, res) => {
     } catch (err) {
         res.status(500).json({ error: 'Login failed' });
     }
+});
+
+// Debug endpoint to check Cloudflare headers (public route)
+app.get('/api/debug/headers', (req, res) => {
+    res.json({
+        cfJwt: req.headers['cf-access-jwt-assertion'] ? 'Present' : 'Missing',
+        cfJwtLength: req.headers['cf-access-jwt-assertion']?.length || 0,
+        allHeaders: Object.keys(req.headers),
+        userAgent: req.headers['user-agent']
+    });
 });
 
 app.get('/api/users', async (req, res) => {
@@ -176,7 +186,7 @@ app.get('/api/servers', (req, res) => {
 });
 
 const GAME_DEFAULTS = {
-    '4020': { executable: 'srcds.exe', args: ['-console', '-game', 'garrysmod', '+map', 'gm_construct', '+maxplayers', '16'] },
+    '4020': { executable: 'srcds_win64.exe', args: ['-console', '-game', 'garrysmod', '+map', 'gm_construct', '+maxplayers', '16'], beta: 'x86-64' },
     '232250': { executable: 'srcds.exe', args: ['-console', '-game', 'tf', '+map', 'cp_dustbowl', '+maxplayers', '24'] },
     '740': { executable: 'srcds.exe', args: ['-console', '-game', 'csgo', '-usercon', '+game_type', '0', '+game_mode', '1', '+mapgroup', 'mg_active', '+map', 'de_dust2'] },
     '4940': { executable: 'srcds.exe', args: ['-console', '-game', 'cstrike', '+map', 'de_dust2', '+maxplayers', '16'] },
@@ -200,14 +210,16 @@ app.post('/api/install', async (req, res) => {
                 io.emit('install-log', `Files copied successfully!`);
             } else {
                 io.emit('install-log', `Game not found in cache. Falling back to standard download...`);
+                const defaults = GAME_DEFAULTS[appId];
                 await steamcmd.install(appId, installPath, (log) => {
                     io.emit('install-log', log);
-                });
+                }, defaults?.beta);
             }
         } else {
+            const defaults = GAME_DEFAULTS[appId];
             await steamcmd.install(appId, installPath, (log) => {
                 io.emit('install-log', log);
-            });
+            }, defaults?.beta);
         }
 
         // Get template configuration
@@ -965,7 +977,10 @@ if (fs.existsSync(frontendPath)) {
     });
 }
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`🚀 ServerForge running on port ${PORT}`);
+    console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🌐 Access at: ${process.env.APP_URL || `http://localhost:${PORT}`}`);
 });
+

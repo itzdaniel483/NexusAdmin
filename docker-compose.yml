@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  serverforge:
+    build: .
+    container_name: serverforge
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - APP_URL=${APP_URL:-http://localhost:3000}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
+      - JWT_SECRET=${JWT_SECRET:-please-change-this-secret}
+    volumes:
+      # Persistent data volumes
+      - serverforge_data:/app/data
+      - serverforge_cache:/app/cache
+      - serverforge_servers:/app/servers
+      - serverforge_backups:/app/backups
+    restart: unless-stopped
+    networks:
+      - serverforge_network
+
+  # Example: Second instance on different port
+  # Uncomment to run multiple instances
+  # serverforge-instance2:
+  #   build: .
+  #   container_name: serverforge-instance2
+  #   ports:
+  #     - "3001:3000"
+  #   environment:
+  #     - NODE_ENV=production
+  #     - PORT=3000
+  #     - APP_URL=http://localhost:3001
+  #     - FRONTEND_URL=http://localhost:3001
+  #     - JWT_SECRET=different-secret-for-instance2
+  #   volumes:
+  #     - serverforge_data_instance2:/app/data
+  #     - serverforge_cache_instance2:/app/cache
+  #     - serverforge_servers_instance2:/app/servers
+  #     - serverforge_backups_instance2:/app/backups
+  #   restart: unless-stopped
+  #   networks:
+  #     - serverforge_network
+
+volumes:
+  serverforge_data:
+  serverforge_cache:
+  serverforge_servers:
+  serverforge_backups:
+  # serverforge_data_instance2:
+  # serverforge_cache_instance2:
+  # serverforge_servers_instance2:
+  # serverforge_backups_instance2:
+
+networks:
+  serverforge_network:
+    driver: bridge

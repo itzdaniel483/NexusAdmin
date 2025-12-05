@@ -2,7 +2,13 @@ const jwt = require('jsonwebtoken');
 const settingsStore = require('../services/settingsStore');
 const axios = require('axios');
 
-const JWT_SECRET = 'tcadmin-secret-key-change-this'; // TODO: Move to environment variable
+const JWT_SECRET = process.env.JWT_SECRET || 'tcadmin-secret-key-change-this';
+
+// Warn if using default secret in production
+if (JWT_SECRET === 'tcadmin-secret-key-change-this' && process.env.NODE_ENV === 'production') {
+    console.warn('⚠️  WARNING: Using default JWT_SECRET in production! Set JWT_SECRET environment variable.');
+}
+
 
 // Cache for Cloudflare public keys
 let cfPublicKeysCache = null;
@@ -72,7 +78,7 @@ async function verifyCloudflareJWT(token, teamDomain, audience) {
 
 const authMiddleware = async (req, res, next) => {
     // Public routes that don't require authentication
-    const publicRoutes = ['/api/login', '/api/settings'];
+    const publicRoutes = ['/api/login', '/api/settings', '/api/debug/headers'];
     if (publicRoutes.includes(req.originalUrl)) {
         return next();
     }
@@ -87,6 +93,7 @@ const authMiddleware = async (req, res, next) => {
 
             // If no Cloudflare JWT, allow for local testing in development only
             if (!cfJwt) {
+                console.log('[Auth] No Cloudflare JWT found in headers');
                 if (process.env.NODE_ENV === 'production') {
                     return res.status(401).json({
                         error: 'Cloudflare Access JWT required. Please access this application through your Cloudflare Access URL.'
@@ -102,12 +109,21 @@ const authMiddleware = async (req, res, next) => {
                 return next();
             }
 
+            console.log('[Auth] Cloudflare JWT found, verifying...');
+
             // Verify we have the required Cloudflare configuration
             if (!settings.cfAccessTeamDomain || !settings.cfAccessAud) {
+                console.error('[Auth] Cloudflare config missing:', {
+                    teamDomain: !!settings.cfAccessTeamDomain,
+                    aud: !!settings.cfAccessAud
+                });
                 return res.status(500).json({
                     error: 'Cloudflare Access not properly configured. Please set Team Domain and AUD in Settings.'
                 });
             }
+
+            console.log('[Auth] Using Team Domain:', settings.cfAccessTeamDomain);
+            console.log('[Auth] Using AUD:', settings.cfAccessAud.substring(0, 10) + '...');
 
             try {
                 // Verify the Cloudflare JWT
@@ -116,6 +132,8 @@ const authMiddleware = async (req, res, next) => {
                     settings.cfAccessTeamDomain,
                     settings.cfAccessAud
                 );
+
+                console.log('[Auth] JWT verified successfully for:', verified.email || verified.sub);
 
                 // Extract user info from the verified token
                 req.user = {
@@ -127,6 +145,7 @@ const authMiddleware = async (req, res, next) => {
 
                 return next();
             } catch (err) {
+                console.error('[Auth] Cloudflare JWT verification failed:', err.message);
                 return res.status(401).json({
                     error: 'Invalid Cloudflare Access JWT',
                     details: err.message

@@ -1,6 +1,6 @@
 "UserLocalConfigStore"
 {
-	"AppInfoChangeNumber"		"32401390"
+	"AppInfoChangeNumber"		"32495125"
 	"Software"
 	{
 		"Valve"
@@ -16,5 +16,9 @@
 				}
 			}
 		}
+	}
+	"UserAppConfig"
+	{
+		"4020"		"0055736572436f6e6669670001426574614b6579007838362d3634000808"
 	}
 }

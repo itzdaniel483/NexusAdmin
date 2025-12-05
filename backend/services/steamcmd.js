@@ -63,16 +63,22 @@ rcon_password "${rconPassword}"
         console.log(`Created server config at ${cfgPath}`);
     }
 
-    async install(appId, installPath, onLog) {
+    async install(appId, installPath, onLog, beta = null) {
         if (!this.ready) await this.init();
 
         return new Promise((resolve, reject) => {
             const args = [
                 '+force_install_dir', installPath,
                 '+login', 'anonymous',
-                '+app_update', appId,
-                '+quit'
+                '+app_update', appId
             ];
+
+            // Add beta branch if specified
+            if (beta) {
+                args.push('-beta', beta);
+            }
+
+            args.push('+quit');
 
             console.log(`Running SteamCMD: ${EXECUTABLE} ${args.join(' ')}`);
             const process = spawn(EXECUTABLE, args);

@@ -24,14 +24,24 @@ function App() {
         localStorage.removeItem('user');
         delete axios.defaults.headers.common['Authorization'];
 
-        // Try to verify with backend (which will check for Cloudflare JWT)
+        // Try to verify with backend (which will check for Cloudflare JWT or allow local testing)
         try {
-          await axios.get('/api/servers');
-          // If successful, we're authenticated via Cloudflare
-          setUser({ username: 'Cloudflare User', role: 'admin' });
-        } catch {
+          const serversRes = await axios.get('/api/servers');
+          console.log('Cloudflare auth check successful');
+
+          // If successful, we're authenticated (either via Cloudflare or local testing)
+          // Try to get user info to see if we're in local testing mode
+          try {
+            const usersRes = await axios.get('/api/users');
+            // If we can get users, we're authenticated as admin
+            setUser({ username: 'Local Test User', role: 'admin', localTesting: true });
+          } catch {
+            // Fallback to generic Cloudflare user
+            setUser({ username: 'Cloudflare User', role: 'admin' });
+          }
+        } catch (err) {
           // Not authenticated - will show login screen with Cloudflare message
-          console.log('Not authenticated via Cloudflare');
+          console.log('Not authenticated via Cloudflare:', err.message);
         }
         setLoading(false);
         return;
@@ -57,7 +67,27 @@ function App() {
     checkAuth();
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    // Check if we're in Cloudflare mode
+    try {
+      const res = await axios.get('/api/settings');
+      if (res.data.authMode === 'external') {
+        // In Cloudflare mode, show a message
+        const confirmLogout = window.confirm(
+          'You are using Cloudflare Zero Trust authentication.\n\n' +
+          'Clicking OK will clear your local session, but Cloudflare will automatically re-authenticate you when you refresh.\n\n' +
+          'To fully log out, you need to log out of Cloudflare Access:\n' +
+          '1. Visit: https://bytemypc.cloudflareaccess.com\n' +
+          '2. Click your profile and select "Logout"\n\n' +
+          'Continue with local logout?'
+        );
+
+        if (!confirmLogout) return;
+      }
+    } catch (err) {
+      console.error('Failed to check auth mode:', err);
+    }
+
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     delete axios.defaults.headers.common['Authorization'];

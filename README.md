@@ -60,6 +60,27 @@ Built for speed, security, and ease of use.
     npm start
     ```
 
+### 🐳 Docker (Recommended for Production)
+
+Docker deployment provides easy multi-instance support and simplified deployment to platforms like Dokploy.
+
+1.  **Build and run with Docker Compose:**
+    ```bash
+    docker-compose up -d
+    ```
+2.  **Access the panel:** Open `http://localhost:3000`
+    *   Default User: `admin`
+    *   Default Pass: `admin`
+
+**For detailed Docker deployment instructions**, including:
+- Dokploy deployment
+- Multi-instance setup
+- Environment configuration
+- Production best practices
+
+See **[DOCKER.md](DOCKER.md)** for the complete guide.
+
+
 ## 🎮 Supported Games
 
 ServerForge supports 16+ games out of the box, including:

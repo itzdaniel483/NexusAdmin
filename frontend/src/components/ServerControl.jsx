@@ -10,8 +10,10 @@ import CommandEditor from './CommandEditor';
 import BackupManager from './BackupManager';
 import UpdateManager from './UpdateManager';
 import PluginManager from './PluginManager';
+import { WS_URL, API_URL } from '../config';
 
-const socket = io('http://localhost:3000');
+const socket = io(WS_URL);
+
 
 function ServerControl({ server }) {
     const terminalRef = useRef(null);
@@ -159,7 +161,7 @@ function ServerControl({ server }) {
             // Display command in terminal
             xtermRef.current?.write(`\r\n\x1b[36m> ${command}\x1b[0m\r\n`);
 
-            const res = await axios.post(`http://localhost:3000/api/server/${serverId}/command`, {
+            const res = await axios.post(`${API_URL}/api/server/${serverId}/command`, {
                 command: command
             });
 

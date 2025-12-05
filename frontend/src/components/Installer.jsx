@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { Download, Loader2 } from 'lucide-react';
 import { io } from 'socket.io-client';
+import { WS_URL } from '../config';
 
 const GAMES = [
     { id: '740', name: 'Counter-Strike: Global Offensive', appId: '740' },
@@ -72,7 +73,7 @@ export default function Installer() {
         setInstalling(true);
         setLogs([]);
 
-        const socket = io('http://localhost:3000');
+        const socket = io(WS_URL);
         const logHandler = (data) => {
             setLogs(prev => [...prev, data]);
         };
